@@ -50,8 +50,9 @@ def set_power_status(conn, opt):
 			packet_options.update({'interface': opt["--wol-interface"]})
 		try:
 			send_magic_packet(*packet_options)
+			logging.debug("WOL packet sent with options %s", *packet_options)
 		except Exception as e:
-			fail(EC_STATUS)
+			fail(EC_GENERIC_ERROR)
 
 
 # We use method here as the RPC procedure not HTTP method as all commands use POST
