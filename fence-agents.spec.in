@@ -1142,6 +1142,17 @@ Fence agent for Shelly Switches.
 %{_sbindir}/fence_shelly_gen2
 %{_mandir}/man8/fence_shelly_gen2.8*
 
+%package shelly_wol
+License: GPL-2.0-or-later AND LGPL-2.0-or-later
+Summary: Fence agent for Shelly Switches with Wake-on-Lan
+Requires: fence-agents-common = %{version}-%{release}
+BuildArch: noarch
+%description shelly_wol
+Fence agnet for Shelly Switches with Wake-on-Lan.
+%files shelly_wol
+%{_bindir}/fence_shelly_wol
+%{_mandir}/fence_shelly_wol*
+
 %package vbox
 License: GPL-2.0-or-later AND LGPL-2.0-or-later
 Summary: Fence agent for VirtualBox
