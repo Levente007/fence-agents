@@ -15,6 +15,16 @@ try:
 except ImportError as e:
 	logging.warning("The 'wakeonlan' module has been not installed or is unavailable, try to execute the command 'pip install wakeonlan --upgrade' to solve. error: %s" % e)
 
+try:
+	from pythonping import ping
+except ImportError as e:
+	logging.warning("The 'pythonping' module has been not installed or is unavailable, try to execute the command 'pip install pythonping --upgrade' to solve. error: %s" % e)
+
+try:
+	import time
+except ImportError as e:
+	logging.warning("The 'time' module is not available. error: %s" % e)
+
 state = {True: "on", False: "off"}
 
 
@@ -31,6 +41,11 @@ def get_power_status(conn, opt):
 		subkey = "params"
 	elif "result" in result:
 		subkey = "result"
+
+	# If ping option is specified, verify the device is reachable
+	verbose = opt["--verbose_level"] >= 1
+	ret = ping(opt["--host_ip"], count=3, timeout=60, verbose=verbose)
+	
 	return state[result[subkey]["output"]]
 
 
@@ -53,6 +68,7 @@ def set_power_status(conn, opt):
 			logging.debug("WOL packet sent with options %s", *packet_options)
 		except Exception as e:
 			fail(EC_GENERIC_ERROR)
+		time.sleep(int(opt["--power_wait"]))
 
 
 # We use method here as the RPC procedure not HTTP method as all commands use POST
@@ -137,7 +153,7 @@ def send_command(conn, payload):
 	return result
 
 def define_new_opts():
-	all_opt["wol-mac"] = {
+	all_opt["wol_mac"] = {
 		"getopt": ":",
 		"longopt": "wol-mac",
 		"help": "--wol-mac						MAC address to use for Wake-on-LAN packet when powering on",
@@ -145,7 +161,7 @@ def define_new_opts():
 		"shortdesc": "WOL MAC Address",
 		"order": 2,
 	}
-	all_opt["wol-ip"] = {
+	all_opt["wol_ip"] = {
 		"getopt": ":",
 		"longopt": "wol-ip",
 		"help": "--wol-ip						IP address to use for Wake-on-LAN packet when powering on",
@@ -153,7 +169,7 @@ def define_new_opts():
 		"shortdesc": "WOL IP Address",
 		"order": 2,
 	}
-	all_opt["wol-port"] = {
+	all_opt["wol_port"] = {
 		"getopt": ":",
 		"longopt": "wol-port",
 		"help": "--wol-port						Port to use for Wake-on-LAN packet when powering on (default: 9)",
@@ -162,12 +178,20 @@ def define_new_opts():
 		"order": 2,
 		"default": "9",
 	}
-	all_opt["wol-interface"] = {
+	all_opt["wol_interface"] = {
 		"getopt": ":",
 		"longopt": "wol-interface",
 		"help": "--wol-interface				Network interface to use for sending Wake-on-LAN packet when powering on",
 		"required": "0",
 		"shortdesc": "WOL Network Interface",
+		"order": 2,
+	}
+	all_opt["host_ip"] = {
+		"getopt": ":",
+		"longopt": "host-ip",
+		"help": "--host-ip						IP address to use for ping check",
+		"required": "0",
+		"shortdesc": "Host IP Address",
 		"order": 2,
 	}
 
@@ -179,10 +203,13 @@ def main():
 		"notls",
 		"web",
 		"port",
-		"wol-mac",
-		"wol-ip",
-		"wol-port",
-		"wol-interface",
+		"plug",
+		"power_wait",
+		# "wol_mac",
+		# "wol_ip",
+		# "wol_port",
+		# "wol_interface",
+		# "host_ip",
 	]
 
 	atexit.register(atexit_handler)
