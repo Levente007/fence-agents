@@ -56,7 +56,7 @@ def set_power_status(conn, opt):
 		result = send_command(conn, gen_payload(opt, "Switch.Set", output=output))
 	except Exception as e:
 		fail(EC_STATUS)
-    # If powering on and WOL MAC address is provided, send WOL packet
+	# If powering on and WOL MAC address is provided, send WOL packet
 	if opt["--action"] == "on" and "--wol-mac" in opt:
 		packet_options = {opt["--wol-mac"]}
 		if "--wol-ip" in opt and "--wol-port" in opt:
@@ -203,13 +203,12 @@ def main():
 		"notls",
 		"web",
 		"port",
-		"plug",
 		"power_wait",
-		# "wol_mac",
-		# "wol_ip",
-		# "wol_port",
-		# "wol_interface",
-		# "host_ip",
+		"wol_mac",
+		"wol_ip",
+		"wol_port",
+		"wol_interface",
+		"host_ip",
 	]
 
 	atexit.register(atexit_handler)
