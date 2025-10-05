@@ -20,11 +20,6 @@ try:
 except ImportError as e:
 	logging.warning("The 'pythonping' module has been not installed or is unavailable, try to execute the command 'pip install pythonping --upgrade' to solve. error: %s" % e)
 
-try:
-	import time
-except ImportError as e:
-	logging.warning("The 'time' module is not available. error: %s" % e)
-
 state = {True: "on", False: "off"}
 
 
@@ -42,10 +37,18 @@ def get_power_status(conn, opt):
 	elif "result" in result:
 		subkey = "result"
 
-	# If ping option is specified, verify the device is reachable
-	verbose = opt["--verbose_level"] >= 1
-	ret = ping(opt["--host_ip"], count=3, timeout=60, verbose=verbose)
-	
+	if state[result[subkey]["output"]] == "on" and "--host-ip" in opt:
+		try:
+			resp = ping(opt["--host-ip"], count=3, timeout=1)
+		except Exception as e:
+			logging.error("Ping check failed: %s", e)
+			return state[result[subkey]["output"]]
+		if resp.packets_lost == True:
+			logging.debug("Ping packet lost, marking power status as off")
+			return "off"
+	if "--host-ip" not in opt:
+		logging.debug("Skipping ping check as --host-ip not provided")
+		logging.warning("--host-ip not provided, power status may be inaccurate")
 	return state[result[subkey]["output"]]
 
 
@@ -66,10 +69,10 @@ def set_power_status(conn, opt):
 		try:
 			send_magic_packet(*packet_options)
 			logging.debug("WOL packet sent with options %s", *packet_options)
+			if "--power_wait" not in opt:
+				logging.warning("--power_wait not set, node might not boot in time for status check")
 		except Exception as e:
 			fail(EC_GENERIC_ERROR)
-		time.sleep(int(opt["--power_wait"]))
-
 
 # We use method here as the RPC procedure not HTTP method as all commands use POST
 def gen_payload(opt, method, output=None):
