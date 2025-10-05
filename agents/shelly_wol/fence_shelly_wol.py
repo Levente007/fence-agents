@@ -39,7 +39,7 @@ def get_power_status(conn, opt):
 
 	if state[result[subkey]["output"]] == "on" and "--host-ip" in opt:
 		try:
-			resp = ping(opt["--host-ip"], count=3, timeout=1)
+			resp = ping(opt["--host-ip"], count=3, timeout=0.1)
 		except Exception as e:
 			logging.error("Ping check failed: %s", e)
 			return state[result[subkey]["output"]]
