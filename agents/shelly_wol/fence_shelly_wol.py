@@ -39,16 +39,17 @@ def get_power_status(conn, opt):
 
 	if state[result[subkey]["output"]] == "on" and "--host-ip" in opt:
 		try:
-			resp = ping(opt["--host-ip"], count=3, timeout=0.1)
+			resp = ping(opt["--host-ip"], count=3, timeout=int(opt["--ping-timeout"]))
 		except Exception as e:
 			logging.error("Ping check failed: %s", e)
 			return state[result[subkey]["output"]]
 		if resp.packets_lost == True:
 			logging.debug("Ping packet lost, marking power status as off")
 			return "off"
+		logging.debug("Ping check successful, marking power status as on")
 	if "--host-ip" not in opt:
-		logging.debug("Skipping ping check as --host-ip not provided")
-		logging.warning("--host-ip not provided, power status may be inaccurate")
+		logging.debug("Skipping ping check as host_ip not provided")
+		logging.warning("host_ip not provided, power status may be inaccurate")
 	return state[result[subkey]["output"]]
 
 
@@ -69,8 +70,8 @@ def set_power_status(conn, opt):
 		try:
 			send_magic_packet(*packet_options)
 			logging.debug("WOL packet sent with options %s", *packet_options)
-			if "--power_wait" not in opt:
-				logging.warning("--power_wait not set, node might not boot in time for status check")
+			if "--power-wait" not in opt or int(opt["--power-wait"]) == 1: # default value of 1
+				logging.warning("power_wait not set, node might not boot in time for status check")
 		except Exception as e:
 			fail(EC_GENERIC_ERROR)
 
@@ -197,6 +198,15 @@ def define_new_opts():
 		"shortdesc": "Host IP Address",
 		"order": 2,
 	}
+	all_opt["ping_timeout"] = {
+		"getopt": ":",
+		"longopt": "ping-timeout",
+		"help": "--ping-timeout				Timeout in seconds to wait for ping response (default: 1)",
+		"required": "0",
+		"shortdesc": "Ping Timeout",
+		"order": 2,
+		"default": "1",
+	}
 
 def main():
 	device_opt = [
@@ -212,6 +222,7 @@ def main():
 		"wol_port",
 		"wol_interface",
 		"host_ip",
+		"ping_timeout",
 	]
 
 	atexit.register(atexit_handler)
