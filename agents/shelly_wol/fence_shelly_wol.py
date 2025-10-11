@@ -235,7 +235,7 @@ def main():
 
 	docs = {}
 	docs["shortdesc"] = "Fence agent for Shelly Gen 2+ Switches with Wake-on-LAN"
-	docs["longdesc"] = """fence_shelly_gen2 is a Power Fencing agent which can be \
+	docs["longdesc"] = """fence_shelly_wol is a Power Fencing agent which can be \
 used with Shelly Switches supporting the gen 2+ API to fence attached hardware. Additionally, this agent can send a Wake-on-LAN (WOL) packet to the device when powering on."""
 	docs["vendorurl"] = "https://shelly-api-docs.shelly.cloud/gen2/"
 	show_docs(options, docs)
