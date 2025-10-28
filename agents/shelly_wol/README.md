@@ -1,5 +1,6 @@
 # Shelly WakeOnLan fence agent docs
 fence_shelly_wol is a Power Fencing agent which can be used with Shelly Switches supporting the gen 2+ API to fence attached hardware. Additionally, this agent can send a Wake-on-LAN (WOL) packet to the device when powering on.
+This fencing agent provides a solution for small clusters where the nodes(PCs) don't have automatic poweron. Here hardware problems exist and sometimes fencing is needed for the nodes. This agent makes sure the shutdown is complete by cutting the power via shelly and then starts a the node manually making sure it boots up correctly.
 ## Features
 ### Shelly
 The shelly device can be used to powermanage a node by cutting the cutting power and making sure node gets a full reset.
@@ -45,7 +46,7 @@ pcs stonith describe fence_shelly_wol
 ```
 If it doesn't show any errors we can procede to creating the fencing agent. Here the name of the fencing agent is 'myshelly' and the following options are required or strongly recommended to use.
 ```
-pcs stonith create myshelly fence_shelly_wol ip="shelly device ip address" plug=0 pcmk_host_list="fencing agent target node name in cluster" pcmk_host_check="static-list" password="YOURPASS" wol-mac="NODE MAC" host_ip="fencing agent target node ip"
+pcs stonith create myshelly fence_shelly_wol ip="shelly device ip address" plug=0 pcmk_host_list="fencing.agent.target.node.name.in.cluster" pcmk_host_check="static-list" password="YOURPASS" wol-mac="NODE MAC" host_ip="fencing.agent.target.node.ip"
 
 ```
 Another recommended option to use is 'power_wait' since it takes time for the server to boot up propely we don't need to check if it's started until then. If you use 'power_wait' make sure the 'stonith-timeout' pacemaker property is greater the the power_wait other wise the agent will exit before finishing. You can do this with the following command:
@@ -56,4 +57,15 @@ After creating the agent we can check it's configuration with:
 ```
 pcs stonith config myshelly
 ```
-With this you have succesfully created a fence_shelly_wol fencing agent. Testing can be done manually and then by creating an error where pacemaker decides to fence the targeted node. Manual testing can be done by using the `pcs fence targeted.node.name`. To check logs you can use `cat /var/logs/messages` and to enable debug logs inreace verbose level in the agent configuration `pcs stonith update myshelly verbose_level=1`.
+With this you have succesfully created a fence_shelly_wol fencing agent. 
+## Testing & Debug
+Testing can be done manually and then by creating an error where pacemaker decides to fence the targeted node. Manual testing can be done by using the `pcs fence targeted.node.name`. To check logs you can use `cat /var/logs/messages` and to enable debug logs incrase verbose level in the agent configuration `pcs stonith update myshelly verbose_level=1`.
+This fencing agent has different error logs and warnings.
+### Warnings & Errors
+If the wakeonlan or pythonping modules are missing it logs a warning. To install these modules use:
+```
+pip install wakeonlan --upgrade
+pip install pythonping --upgrade
+```
+If the host-ip option is specified but meaining it should try to ping but the pythonping module is missing it raises an error with `Ping check failed` error message.
+Similarly if wol-mac is provided but the wakeonlan module is not installed it exits with EC_GENERIC_ERROR and logs error message `Sending magic packet failed`.

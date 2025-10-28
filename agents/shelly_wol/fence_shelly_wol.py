@@ -73,6 +73,7 @@ def set_power_status(conn, opt):
 			if "--power-wait" not in opt or int(opt["--power-wait"]) == 1: # default value of 1
 				logging.warning("power_wait not set, node might not boot in time for status check")
 		except Exception as e:
+			logging.error("Sending magic packet failed: %s", e)
 			fail(EC_GENERIC_ERROR)
 
 # We use method here as the RPC procedure not HTTP method as all commands use POST
